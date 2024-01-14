@@ -100,7 +100,7 @@ func main() {
 		fmt.Println(humanReadable)
 
 		// Create CSV data
-		row := []string{"CRON Expression", "Next Scheduled Time 1", "Next Scheduled Time 2", "Next Scheduled Time 3", "Next Scheduled Time 4", "Next Scheduled Time 5"}
+		row := []string{"CRON Expression", "Next Scheduled Times"}
 		row = append(row, cronExpression)
 
 		schedule, err := cronToHumanReadable(cronExpression)
