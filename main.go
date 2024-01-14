@@ -12,7 +12,7 @@ import (
 )
 
 func cronToHumanReadable(cronExpression string) (string, error) {
-	parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
 
 	schedule, err := parser.Parse(cronExpression)
 	if err != nil {
@@ -31,6 +31,31 @@ func cronToHumanReadable(cronExpression string) (string, error) {
 	// Extract human-readable details
 	humanReadable := fmt.Sprintf("Expression: %s\n", cronExpression)
 	humanReadable += fmt.Sprintf("Next 5 scheduled times:\n%s\n", strings.Join(scheduleTimes, "\n"))
+
+	// Extract CRON fields
+	fields := strings.Fields(cronExpression)
+	if len(fields) < 5 {
+		return humanReadable, fmt.Errorf("Invalid CRON expression: %s", cronExpression)
+	}
+
+	secs, mins, hours, days, months := fields[0], fields[1], fields[2], fields[3], fields[4]
+
+	// Create human-readable description
+	description := fmt.Sprintf("It runs every %s", secs)
+	if mins != "*" {
+		description += fmt.Sprintf(" minute(s) past the hour")
+	}
+	if hours != "*" {
+		description += fmt.Sprintf(" at %s hour(s)", hours)
+	}
+	if days != "*" {
+		description += fmt.Sprintf(" on day(s) %s", days)
+	}
+	if months != "*" {
+		description += fmt.Sprintf(" in %s", months)
+	}
+
+	humanReadable += fmt.Sprintf("Human-readable description:\n%s\n", description)
 
 	return humanReadable, nil
 }
