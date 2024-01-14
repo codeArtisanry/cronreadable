@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -53,14 +54,39 @@ func writeToCSV(filename string, data [][]string) error {
 }
 
 func main() {
-	cronExpressions := []string{
-		"0 * * * *",        // Every hour
-		"0 0 * * *",        // Every day at midnight
-		"0 0 1,15 * *",     // Every 1st and 15th of the month
-		"0 8-17 * * 1-5",   // Every day at 8 AM to 5 PM from Monday through Friday
-		"*/15 * * * *",     // Every 15 minutes
-		"0 12 * JAN,MAR *", // Every day at noon in January and March
-		"0 0 1-7 * MON",    // First 7 days of the month if it's Monday
+	var cronExpressions []string
+	var fromFile bool
+
+	flag.BoolVar(&fromFile, "file", false, "Read CRON expressions from file")
+	flag.Parse()
+
+	if fromFile {
+		// If -file flag is provided, read CRON expressions from file
+		fileName := "cron_expressions.txt"
+		file, err := os.Open(fileName)
+		if err != nil {
+			fmt.Println("Error opening file:", err)
+			return
+		}
+		defer file.Close()
+
+		// Read the content from the file
+		buffer := make([]byte, 1024)
+		n, err := file.Read(buffer)
+		if err != nil {
+			fmt.Println("Error reading file:", err)
+			return
+		}
+
+		cronExpressions = strings.Fields(string(buffer[:n]))
+	} else {
+		// If -file flag is not provided, use command line arguments as CRON expressions
+		cronExpressions = flag.Args()
+	}
+
+	if len(cronExpressions) == 0 {
+		fmt.Println("Please provide CRON expressions using command line arguments or use -file flag to read from file.")
+		return
 	}
 
 	var csvData [][]string
@@ -84,7 +110,11 @@ func main() {
 		}
 
 		nextScheduledTimes := strings.Split(schedule, "\n")[2:]
-		row = append(row, nextScheduledTimes...)
+
+		// Append each row separately
+		for _, time := range nextScheduledTimes {
+			row = append(row, "", time)
+		}
 
 		csvData = append(csvData, row)
 	}
